@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  job-listing-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - API_URL=https://erp-dev.reanthai.com
+        - NEXT_PUBLIC_API_URL=https://erp-dev.reanthai.com
+    container_name: rtg-job-listing-dev
+    ports:
+      - "3002:3000"
+    environment:
+      - NODE_ENV=production
+      - API_URL=https://erp-dev.reanthai.com
+      - NEXT_PUBLIC_API_URL=https://erp-dev.reanthai.com
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/jobs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

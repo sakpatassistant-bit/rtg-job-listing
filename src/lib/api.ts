@@ -99,7 +99,7 @@ class ApiClient {
 export const api = new ApiClient();
 
 // Server-side fetching (for SSR/SSG)
-export async function fetchJobs(): Promise<JobPosting[]> {
+export async function fetchJobs(companyCode?: string): Promise<JobPosting[]> {
   const apiUrl = process.env.API_URL || 'http://localhost:3000';
 
   try {
@@ -113,7 +113,14 @@ export async function fetchJobs(): Promise<JobPosting[]> {
     }
 
     const data = await response.json();
-    return Array.isArray(data) ? data : [];
+    let jobs = Array.isArray(data) ? data : [];
+
+    // Filter by company code if provided
+    if (companyCode) {
+      jobs = jobs.filter((job: JobPosting) => job.company?.code === companyCode);
+    }
+
+    return jobs;
   } catch (error) {
     console.error('Error fetching jobs:', error);
     return [];

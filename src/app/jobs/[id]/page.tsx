@@ -43,8 +43,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-// Revalidate every 60 seconds
-export const revalidate = 60;
+// Revalidate once per day
+export const revalidate = 86400;
 
 export default async function JobDetailPage({ params }: PageProps) {
   const { id } = await params;

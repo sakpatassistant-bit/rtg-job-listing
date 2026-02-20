@@ -28,15 +28,38 @@ export interface JobListResponse {
 // Application types
 export interface JobApplicationInput {
   fullName: string;
-  email: string;
-  phone?: string;
-  coverLetter?: string;
+  nickname: string;
+  phone: string;
+  lineId?: string;
+  facebook?: string;
   resumeUrl?: string;
+  transcriptUrl?: string;
+  selfIntroduction?: string;
 }
 
 export interface JobApplicationResponse {
   id: string;
+  editToken: string;
   message: string;
+}
+
+export interface JobApplicationData {
+  id: string;
+  fullName: string;
+  nickname: string | null;
+  phone: string | null;
+  lineId: string | null;
+  facebook: string | null;
+  resumeUrl: string | null;
+  transcriptUrl: string | null;
+  selfIntroduction: string | null;
+  jobTitle: string;
+  companyName: string;
+  jobId: string;
+}
+
+export interface FileUploadResponse {
+  url: string;
 }
 
 // API Error

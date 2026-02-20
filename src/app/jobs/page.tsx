@@ -7,8 +7,8 @@ export const metadata: Metadata = {
   description: 'ดูตำแหน่งงานว่างทั้งหมดของ ReAnThai Group',
 };
 
-// Revalidate every 60 seconds
-export const revalidate = 60;
+// Revalidate once per day
+export const revalidate = 86400;
 
 export default async function JobsPage() {
   const jobs = await fetchJobs();

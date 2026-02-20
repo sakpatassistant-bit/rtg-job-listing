@@ -1,4 +1,11 @@
-import { JobPosting, JobApplicationInput, JobApplicationResponse, ApiError } from '@/types';
+import {
+  JobPosting,
+  JobApplicationInput,
+  JobApplicationResponse,
+  JobApplicationData,
+  FileUploadResponse,
+  ApiError,
+} from '@/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
@@ -14,13 +21,19 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    
+
+    const headers: Record<string, string> = {
+      ...(options.headers as Record<string, string>),
+    };
+
+    // Only set Content-Type for non-FormData bodies
+    if (!(options.body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
+
     const response = await fetch(url, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      headers,
     });
 
     if (!response.ok) {
@@ -52,6 +65,35 @@ class ApiClient {
       body: JSON.stringify(application),
     });
   }
+
+  async uploadFile(file: File): Promise<FileUploadResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.request<FileUploadResponse>('/api/public/jobs/upload', {
+      method: 'POST',
+      body: formData,
+    });
+  }
+
+  async getApplicationByToken(token: string): Promise<JobApplicationData> {
+    return this.request<JobApplicationData>(
+      `/api/public/jobs/applications/by-token/${token}`
+    );
+  }
+
+  async updateApplication(
+    token: string,
+    data: Partial<JobApplicationInput>
+  ): Promise<{ message: string }> {
+    return this.request<{ message: string }>(
+      `/api/public/jobs/applications/by-token/${token}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }
+    );
+  }
 }
 
 export const api = new ApiClient();
@@ -59,10 +101,10 @@ export const api = new ApiClient();
 // Server-side fetching (for SSR/SSG)
 export async function fetchJobs(): Promise<JobPosting[]> {
   const apiUrl = process.env.API_URL || 'http://localhost:3000';
-  
+
   try {
     const response = await fetch(`${apiUrl}/api/public/jobs`, {
-      next: { revalidate: 60 }, // Revalidate every 60 seconds
+      next: { revalidate: 86400 },
     });
 
     if (!response.ok) {
@@ -80,7 +122,7 @@ export async function fetchJobs(): Promise<JobPosting[]> {
 
 export async function fetchJob(id: string): Promise<JobPosting | null> {
   const apiUrl = process.env.API_URL || 'http://localhost:3000';
-  
+
   try {
     const response = await fetch(`${apiUrl}/api/public/jobs/${id}`, {
       next: { revalidate: 60 },
@@ -97,6 +139,27 @@ export async function fetchJob(id: string): Promise<JobPosting | null> {
     return response.json();
   } catch (error) {
     console.error('Error fetching job:', error);
+    return null;
+  }
+}
+
+export async function fetchApplicationByToken(
+  token: string
+): Promise<JobApplicationData | null> {
+  const apiUrl = process.env.API_URL || 'http://localhost:3000';
+
+  try {
+    const response = await fetch(
+      `${apiUrl}/api/public/jobs/applications/by-token/${token}`,
+      { cache: 'no-store' }
+    );
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return response.json();
+  } catch {
     return null;
   }
 }
